@@ -654,7 +654,7 @@
     @if($showAltModal)
         @php
             $current = $selectedId ? $files->firstWhere('id', $selectedId) : null;
-            $ext = $current ? strtoupper(pathinfo($current->name, PATHINFO_EXTENSION) ?: 'FILE') : '';
+            $ext = $current ? $current->mime_type : '';
         @endphp
 
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
