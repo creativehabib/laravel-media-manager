@@ -1,5 +1,5 @@
 {
-    "name": "habib/media-manager",
+    "name": "creativehabib/media-manager",
     "description": "Laravel media manager like Botble CMS",
     "type": "library",
     "autoload": {
