@@ -1,0 +1,21 @@
+{
+    "name": "habib/media-manager",
+    "description": "Laravel media manager like Botble CMS",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Habib\\MediaManager\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Habib\\MediaManager\\MediaManagerServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "livewire/livewire": "^3.0"
+    }
+}
