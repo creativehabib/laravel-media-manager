@@ -17,5 +17,13 @@
     "require": {
         "php": "^8.1",
         "livewire/livewire": "^3.0"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "homepage": "https://github.com/creativehabib/laravel-media-manager",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     }
 }
