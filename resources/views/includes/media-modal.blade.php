@@ -13,12 +13,8 @@
     x-on:media-selected.window="selected = $event.detail.id"
     x-on:media-unselected.window="selected = null">
 
-
-
-    {{-- বাইরে ক্লিক করলে বন্ধ করার জন্য wrapper --}}
-    <div class="absolute inset-0"
-        @click="open = false">
-    </div>
+    {{-- বাইরে ক্লিক করলে বন্ধ --}}
+    <div class="absolute inset-0" @click="open = false"></div>
 
     {{-- Modal --}}
     <div class="relative bg-white dark:bg-slate-900 rounded-lg shadow-xl w-[100vw] sm:w-[90vw] lg:w-[75vw] max-h-[90vh] flex flex-col pb-2 overflow-hidden border border-gray-200 dark:border-slate-700">
@@ -46,12 +42,13 @@
                 Close
             </button>
 
-            <button type="button"
-                    @click="Livewire.dispatch('media-insert')"
-                    :disabled="!selected"
-                    class="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white cursor-pointer
-               hover:bg-blue-700
-               disabled:opacity-60 disabled:cursor-not-allowed">
+            <button
+                type="button"
+                @click="Livewire.dispatch('media-insert')"
+                :disabled="!selected"
+                class="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white cursor-pointer
+                       hover:bg-blue-700
+                       disabled:opacity-60 disabled:cursor-not-allowed">
                 Insert
             </button>
         </div>
@@ -59,29 +56,28 @@
 </div>
 
 <x-mediamanager::media-toast position="top-right" timeout="6000" max="4" />
+
+{{-- JS --}}
 <script>
     document.addEventListener('livewire:init', () => {
-        // ১) ইনপুট / প্রিভিউ টার্গেট
-        window._mediaTargetField = null;
-
-        // ২) এডিটরের জন্য callback টার্গেট
+        // কোন input field / editor টার্গেট সেটা রাখব
+        window._mediaTargetField   = null;
         window._mediaEditorCallback = null;
 
         /**
-         * পুরনো সিস্টেম: নির্দিষ্ট input + preview আপডেট করবে
-         * উদাহরণ: openMediaManager('post_thumbnail')
+         * Input + Preview এর জন্য
+         * উদাহরণ: openMediaManager('site_logo')
          */
         window.openMediaManager = function (fieldName) {
-            window._mediaTargetField   = fieldName;
-            window._mediaEditorCallback = null; // নিশ্চিত করি যেন editor মোড না থাকে
+            window._mediaTargetField    = fieldName;
+            window._mediaEditorCallback = null;
 
             window.dispatchEvent(new CustomEvent('open-media-manager'));
         };
 
         /**
-         * নতুন সিস্টেম: যেকোনো editor / কাস্টম জায়গায় ইনসার্ট করার জন্য
-         * উদাহরণ:
-         * openMediaManagerForEditor((url, data) => { ... })
+         * CKEditor বা অন্য যেকোনো editor এর জন্য
+         * উদাহরণ: openMediaManagerForEditor((url, data) => { ... })
          */
         window.openMediaManagerForEditor = function (callback) {
             window._mediaTargetField    = null;
@@ -91,13 +87,22 @@
         };
 
         // Livewire → media-selected ইভেন্ট
-        Livewire.on('media-selected', (payload) => {
-            const data = Array.isArray(payload) ? payload[0] : payload;
-            const url  = data?.url;
+        Livewire.on('media-selected', (...params) => {
+            let data;
 
+            // Case 1: dispatch('media-selected', [ 'id' => ..., 'url' => ... ])
+            if (params.length === 1 && typeof params[0] === 'object') {
+                data = params[0];
+            } else {
+                // Case 2: dispatch('media-selected', id: .., url: .., name: .., mime: ..)
+                const [id, url, name, mime] = params;
+                data = { id, url, name, mime };
+            }
+
+            const url = data?.url;
             if (!url) return;
 
-            // 1️⃣ যদি editor callback সেট করা থাকে → ওটার মাধ্যমে হ্যান্ডেল
+            // 1️⃣ যদি editor callback থাকে → ওখানেই হ্যান্ডেল
             if (typeof window._mediaEditorCallback === 'function') {
                 try {
                     window._mediaEditorCallback(url, data);
@@ -105,16 +110,14 @@
                     console.error('Media editor callback error:', e);
                 }
 
-                // মডাল বন্ধ
                 window.dispatchEvent(new CustomEvent('close-media-manager'));
                 window._mediaEditorCallback = null;
                 return;
             }
 
-            // 2️⃣ নরমাল ইনপুট + প্রিভিউ মোড
+            // 2️⃣ Normal input + preview মোড
             const field = window._mediaTargetField;
             if (!field) {
-                // কিছুই সেট নেই, শুধু মডাল বন্ধ করে দিব
                 window.dispatchEvent(new CustomEvent('close-media-manager'));
                 return;
             }
@@ -125,7 +128,8 @@
 
             if (input) {
                 input.value = url;
-                input.dispatchEvent(new Event('change'));
+                // ✅ Livewire property আপডেটের জন্য input ইভেন্ট
+                input.dispatchEvent(new Event('input', { bubbles: true }));
             }
 
             // ---- প্রিভিউ আপডেট ----
@@ -142,4 +146,3 @@
         });
     });
 </script>
-

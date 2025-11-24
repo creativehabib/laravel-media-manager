@@ -2,6 +2,7 @@
     "name": "creativehabib/media-manager",
     "description": "Laravel media manager like Botble CMS",
     "type": "library",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Habib\\MediaManager\\": "src/"
