@@ -1,32 +1,47 @@
-<div class="mb-4">
-    <label class="block text-sm font-medium mb-1">{{ $label ?? 'Thumbnail' }}</label>
+<div class="space-y-2 pt-1">
+    <h3 class="text-xs font-medium text-slate-700">
+        {{ $label ?? 'Thumbnail' }}
+    </h3>
 
-    <div class="flex items-start gap-3">
-        <div>
-            <img src="{{ $value ?: 'https://placehold.co/640x400/lightgray/gray/jpg?text=No+Image' }}"
+    {{-- Preview Box --}}
+    <div
+        class="flex flex-col items-center justify-center rounded">
+
+        {{-- Image Preview --}}
+        <div class="mb-2">
+            <img src="{{ $value ?: 'https://placehold.co/400x200@2x.png' }}"
                  data-media-preview="{{ $id ?? 'thumbnail' }}"
-                 class="w-24 h-24 object-cover border rounded bg-gray-50"
-                 alt="thumbnail">
+                 class="object-cover h-full"
+                 alt="thumbnail preview">
         </div>
-
-        <div class="flex-1 space-y-2">
-            <input
-                type="text"
-                name="{{ $name ?? 'thumbnail' }}"
-                id="{{ $id ?? 'thumbnail' }}"
-                data-media-input="{{ $id ?? 'thumbnail' }}"
-                class="border rounded px-2 py-1 w-full text-sm"
-                value="{{ $value ?? '' }}"
-                wire:model.defer="{{ $name ?? 'thumbnail' }}"
-            >
-
+        {{-- Actions --}}
+        <div class="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+            {{-- Choose from Media --}}
             <button
                 type="button"
                 onclick="openMediaManager('{{ $id ?? 'thumbnail' }}')"
-                class="px-3 py-1.5 text-xs rounded bg-blue-600 text-white"
-            >
-                Choose from media
+                class="rounded border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100">
+                Choose image
+            </button>
+
+            {{-- Add from URL --}}
+            <button
+                type="button"
+                onclick="document.getElementById('{{ $id ?? 'thumbnail' }}').focus()"
+                class="rounded border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-600 hover:bg-slate-100">
+                or Add from URL
             </button>
         </div>
     </div>
+
+    {{-- Hidden Input (Livewire binding supported) --}}
+    <input type="text"
+           id="{{ $id ?? 'thumbnail' }}"
+           name="{{ $name ?? 'thumbnail' }}"
+           data-media-input="{{ $id ?? 'thumbnail' }}"
+           class="hidden"
+           value="{{ $value ?? '' }}"
+           @if(isset($name)) wire:model.defer="{{ $name }}" @endif
+    >
 </div>
+
