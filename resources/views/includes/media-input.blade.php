@@ -4,7 +4,7 @@
     </h3>
 
     {{-- Preview Box --}}
-    <div class="flex flex-col items-center justify-center rounded-2xl">
+    <div class="flex flex-col rounded-2xl">
 
         {{-- Image Preview --}}
         <div class="mb-2">
