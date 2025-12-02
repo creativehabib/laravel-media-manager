@@ -15,7 +15,7 @@
         </div>
 
         {{-- Actions --}}
-        <div class="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+        <div class="flex flex-wrap items-center gap-2 text-[11px]">
             {{-- Choose from Media --}}
             <button
                 type="button"
