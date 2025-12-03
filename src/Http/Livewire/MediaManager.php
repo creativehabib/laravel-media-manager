@@ -25,6 +25,7 @@ class MediaManager extends Component
         'media-manager-opened' => 'onOpened',
         'media-manager-insert' => 'onInsert',
         'media-insert' => 'handleMediaInsert',
+        'download-from-url' => 'handleDownloadFromUrlForField',
     ];
     public $showMoveToTrashModal = false;
     public $skipTrash = false;
@@ -260,6 +261,95 @@ class MediaManager extends Component
             $this->addError('urlInput', 'Error while downloading: ' . $e->getMessage());
         }
     }
+
+    protected function downloadUrlToMedia(string $url): ?MediaFile
+    {
+        try {
+            $contents = @file_get_contents($url);
+
+            if ($contents === false) {
+                return null;
+            }
+
+            $parsed = parse_url($url);
+            $path   = $parsed['path'] ?? 'file';
+            $name   = basename($path) ?: 'file-' . time();
+
+            $storePath = 'media/' . now()->format('Y/m/d') . '/' . uniqid() . '-' . $name;
+
+            Storage::disk($this->selectedDisk)->put($storePath, $contents);
+
+            $size  = strlen($contents);
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime  = $finfo->buffer($contents) ?: 'application/octet-stream';
+
+            $width  = null;
+            $height = null;
+
+            if (Str::startsWith($mime, 'image/')) {
+                $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
+                $image    = ImageManager::read($fullPath);
+                $width    = $image->width();
+                $height   = $image->height();
+            }
+
+            $media = MediaFile::create([
+                'name'       => $name,
+                'folder_id'  => $this->folder_id,
+                'disk'       => $this->selectedDisk,
+                'path'       => $storePath,
+                'mime_type'  => $mime,
+                'size'       => $size,
+                'visibility' => $this->visibility ?: 'public',
+                'width'      => $width,
+                'height'     => $height,
+            ]);
+
+            if ($this->tagsInput) {
+                $tagIds = collect(explode(',', $this->tagsInput))
+                    ->map(fn ($t) => trim($t))
+                    ->filter()
+                    ->map(fn ($t) => MediaTag::firstOrCreate(['name' => $t])->id);
+
+                $media->tags()->sync($tagIds);
+            }
+
+            return $media;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function handleDownloadFromUrlForField($url, $fieldId = null)
+    {
+        if (! $url) {
+            return;
+        }
+
+        // ---- URL থেকে ডাউনলোড করে MediaFile তৈরি ----
+        $media = $this->downloadUrlToMedia($url);
+
+        if (! $media) {
+            $this->toast('Failed to download image!', 'error');
+            return;
+        }
+
+        // Internal state
+        $this->selectedId = $media->id;
+
+        // JS-কে জানাই যে কাজ শেষ
+        $this->dispatch(
+            'media-url-downloaded',
+            fieldId: $fieldId,
+            id:      $media->id,
+            url:     $media->url,
+            name:    $media->name,
+            mime:    $media->mime_type,
+        );
+
+        $this->toast('Upload from URL successfully!', 'success');
+    }
+
 
     public function loadMore()
     {

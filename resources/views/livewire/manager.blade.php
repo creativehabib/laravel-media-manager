@@ -606,44 +606,74 @@
         <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/40"
              wire:click.self="closeUrlModal">
 
-            <div class="bg-white dark:bg-slate-900 rounded shadow-lg w-full max-w-md p-4 border border-gray-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-900 rounded shadow-lg w-full max-w-md border border-gray-200 dark:border-slate-700">
 
-                <h3 class="text-sm font-semibold mb-3">Upload from URL</h3>
-
-                <div class="mb-3">
-                    <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">File URL</label>
-                    <input type="text"
-                           wire:model.defer="urlInput"
-                           class="w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-xs bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500"
-                           placeholder="https://example.com/image.jpg" autofocus>
-
-                    @error('urlInput')
-                    <div class="text-red-500 text-[11px] mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="flex justify-end gap-2 mt-2">
+                {{-- Header --}}
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold">Add from URL</h3>
                     <button type="button"
                             wire:click="closeUrlModal"
-                            class="px-3 py-1.5 text-xs border border-gray-200 dark:border-slate-700 rounded cursor-pointer bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700">
+                            class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none">
+                        &times;
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-4 py-4 space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1">
+                            URL <span class="text-red-500">*</span>
+                        </label>
+
+                        <input type="text"
+                               wire:model.defer="urlInput"
+                               class="w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-xs bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500"
+                               placeholder="https://example.com/image.jpg" autofocus>
+
+                        @error('urlInput')
+                        <div class="text-red-500 text-[11px] mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Download to local storage অপশন (UI only, চাইলে পরে logic ব্যবহার করবে) --}}
+                    <div class="flex items-start gap-2 text-xs">
+                        <input type="checkbox"
+                               checked
+                               class="mt-0.5 h-3 w-3 rounded border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <p class="font-medium text-gray-700 dark:text-gray-200">
+                                Download image to local storage
+                            </p>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                                If it is unchecked, the image will be displayed from the original URL.
+                                {{-- আপাতত শুধু টেক্সট; future এ এখানে Livewire property bind করতে পারো --}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 py-3 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-2">
+                    <button type="button"
+                            wire:click="closeUrlModal"
+                            class="px-3 py-1.5 text-xs border cursor-pointer border-gray-200 dark:border-slate-700 rounded bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700">
                         Cancel
                     </button>
 
-                    {{-- 🔥 Upload button with spinner --}}
+                    {{-- Botble-style: Save বাটন --}}
                     <button type="button"
                             wire:click="uploadFromUrl"
                             wire:target="uploadFromUrl"
                             wire:loading.attr="disabled"
-                            class="px-3 py-1.5 text-xs rounded bg-blue-600 text-white cursor-pointer flex items-center gap-1">
-
-                        <span wire:loading.remove wire:target="uploadFromUrl">
-                            Upload
-                        </span>
+                            class="px-4 py-1.5 text-xs rounded bg-blue-600 text-white cursor-pointer flex items-center gap-1 cursor-pointer">
+                    <span wire:loading.remove wire:target="uploadFromUrl">
+                        Save
+                    </span>
 
                         <span wire:loading.flex wire:target="uploadFromUrl" class="items-center gap-1">
-                            <i class="fa-solid fa-circle-notch animate-spin"></i>
-                            Uploading...
-                        </span>
+                        <i class="fa-solid fa-circle-notch animate-spin"></i>
+                        <span>Saving...</span>
+                    </span>
                     </button>
                 </div>
             </div>

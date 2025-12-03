@@ -25,11 +25,12 @@
             </button>
 
             <span>or</span>
-            {{-- Add from URL --}}
+
+            {{-- 👉 Add from URL (Botble style modal) --}}
             <button
                 type="button"
-                onclick="document.getElementById('{{ $id ?? 'thumbnail' }}').focus()"
-                class="rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600 hover:bg-slate-100">
+                onclick="openMediaUrlFieldModal('{{ $id ?? 'thumbnail' }}')"
+                class="rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600 hover:bg-slate-100 cursor-pointer">
                 Add from URL
             </button>
         </div>
@@ -45,4 +46,3 @@
            @if(isset($name)) wire:model.defer="{{ $name }}" @endif
     >
 </div>
-
