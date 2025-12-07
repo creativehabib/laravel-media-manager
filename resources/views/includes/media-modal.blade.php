@@ -13,13 +13,9 @@
     x-on:media-selected.window="selected = $event.detail.id"
     x-on:media-unselected.window="selected = null">
 
-    {{-- বাইরে ক্লিক করলে বন্ধ --}}
     <div class="absolute inset-0" @click="open = false"></div>
 
-    {{-- Modal --}}
     <div class="relative bg-white dark:bg-slate-900 rounded-lg shadow-xl w-[100vw] sm:w-[90vw] lg:w-[75vw] max-h-[90vh] flex flex-col pb-2 overflow-hidden border border-gray-200 dark:border-slate-700">
-
-        {{-- Header --}}
         <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-slate-700 shrink-0">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Media gallery</h2>
 
@@ -30,12 +26,10 @@
             </button>
         </div>
 
-        {{-- Body: Livewire কম্পোনেন্ট --}}
         <div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-950/40">
             @livewire('media-manager', [], key('media-manager-modal'))
         </div>
 
-        {{-- Footer: Insert / Close --}}
         <div class="px-4 py-3 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-2 shrink-0 bg-white dark:bg-slate-900">
             <button type="button" @click="open = false"
                     class="px-3 py-1.5 text-xs border border-gray-200 dark:border-slate-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-800 dark:text-gray-100">
@@ -64,10 +58,8 @@
     x-transition.opacity
     class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
 
-    {{-- Backdrop --}}
     <div class="absolute inset-0" @click="closeModal()"></div>
 
-    {{-- Card --}}
     <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700
                 transform transition-all"
          x-transition:enter="ease-out duration-200"
@@ -77,7 +69,6 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
 
-        {{-- Header --}}
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
                 Add image from URL
@@ -88,9 +79,7 @@
             </button>
         </div>
 
-        {{-- Body --}}
         <div class="px-5 py-4 space-y-4">
-            {{-- URL input --}}
             <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     Image URL
@@ -103,7 +92,6 @@
                               bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
             </div>
 
-            {{-- Preview / Loader / Error --}}
             <template x-if="previewLoading">
                 <div class="w-full flex justify-center py-4">
                     <i class="fa-solid fa-spinner animate-spin text-slate-500 text-xl"></i>
@@ -119,7 +107,6 @@
                 <p class="text-xs text-red-500" x-text="error"></p>
             </template>
 
-            {{-- Download toggle --}}
             <div class="flex items-center justify-between pt-2">
                 <span class="text-sm text-slate-700 dark:text-slate-300">
                     Download image to local storage
@@ -135,7 +122,6 @@
             </div>
         </div>
 
-        {{-- Footer --}}
         <div class="flex justify-end gap-2 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
             <button @click="closeModal()"
                     class="px-4 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 cursor-pointer">
@@ -151,14 +137,79 @@
     </div>
 </div>
 
-
 <x-mediamanager::media-toast position="top-right" timeout="6000" max="4" />
 
-{{-- JS --}}
+{{-- ========== COMMON JS HELPERS (set/clear field) ========== --}}
 <script>
-    // 👉 global function: field থেকে modal ওপেন করার জন্য
+    // field এ URL সেট + preview + remove button টগল
+    window.mediaSetField = function (fieldId, url) {
+        let input = document.querySelector('[data-media-input="' + fieldId + '"]')
+            || document.getElementById(fieldId);
+
+        let preview = document.querySelector('[data-media-preview="' + fieldId + '"]')
+            || document.getElementById(fieldId + '_preview');
+
+        let clearBtn = document.querySelector('[data-media-clear="' + fieldId + '"]');
+
+        if (input) {
+            input.value = url || '';
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+        }
+
+        if (preview && url) {
+            preview.src = url;
+        }
+
+        if (clearBtn) {
+            if (url) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        }
+    };
+
+    // field ক্লিয়ার করা (placeholder এ ফেরত)
+    window.mediaClearField = function (fieldId) {
+        let input = document.querySelector('[data-media-input="' + fieldId + '"]')
+            || document.getElementById(fieldId);
+
+        let preview = document.querySelector('[data-media-preview="' + fieldId + '"]')
+            || document.getElementById(fieldId + '_preview');
+
+        let clearBtn = document.querySelector('[data-media-clear="' + fieldId + '"]');
+        let placeholder = preview ? preview.getAttribute('data-media-placeholder') : null;
+
+        if (input) {
+            input.value = '';
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+        }
+
+        if (preview && placeholder) {
+            preview.src = placeholder;
+        }
+
+        if (clearBtn) {
+            clearBtn.classList.add('hidden');
+        }
+    };
+
+    // ❌ আইকনে ক্লিক করলে ক্লিয়ার
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-media-clear]');
+        if (!btn) return;
+
+        const fieldId = btn.getAttribute('data-media-clear');
+        if (!fieldId) return;
+
+        window.mediaClearField(fieldId);
+    });
+</script>
+
+{{-- JS – URL modal + Livewire events --}}
+<script>
+    // field থেকে URL modal ওপেন
     window.openMediaUrlFieldModal = function (fieldId) {
-        // চাইলে _mediaTargetField set করে রাখতে পারো
         window._mediaTargetField = fieldId;
 
         window.dispatchEvent(new CustomEvent('open-add-from-url-field-modal', {
@@ -166,7 +217,6 @@
         }));
     };
 
-    // 👉 AlpineJS component for Add-from-URL modal
     function addFromUrlFieldModal() {
         return {
             show: false,
@@ -211,31 +261,16 @@
             },
 
             apply() {
-                // target field input + preview
                 const fieldId = this.fieldId;
 
-                let input = document.querySelector('[data-media-input="' + fieldId + '"]')
-                    || document.getElementById(fieldId);
-
-                let preview = document.querySelector('[data-media-preview="' + fieldId + '"]')
-                    || document.getElementById(fieldId + '_preview');
-
-                if (!input) {
-                    this.closeModal();
-                    return;
-                }
-
+                // download == false → শুধু ফিল্ডে URL সেট
                 if (!this.download) {
-                    // 🔹 শুধু URL সেট করবে (লোকাল ডাউনলোড না করে)
-                    input.value = this.url;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    if (preview) preview.src = this.url;
-
+                    window.mediaSetField(fieldId, this.url);
                     this.closeModal();
                     return;
                 }
 
-                // 🔥 Download == true → Livewire-এর মাধ্যমে সার্ভারে ডাউনলোড করব
+                // download == true → Livewire-এ পাঠাই
                 if (window.Livewire) {
                     Livewire.dispatch('download-from-url', {
                         fieldId: fieldId,
@@ -248,16 +283,12 @@
         }
     }
 </script>
+
 <script>
     document.addEventListener('livewire:init', () => {
-        // কোন input field / editor টার্গেট সেটা রাখব
-        window._mediaTargetField   = null;
+        window._mediaTargetField    = null;
         window._mediaEditorCallback = null;
 
-        /**
-         * Input + Preview এর জন্য
-         * উদাহরণ: openMediaManager('site_logo')
-         */
         window.openMediaManager = function (fieldName) {
             window._mediaTargetField    = fieldName;
             window._mediaEditorCallback = null;
@@ -265,10 +296,6 @@
             window.dispatchEvent(new CustomEvent('open-media-manager'));
         };
 
-        /**
-         * CKEditor বা অন্য যেকোনো editor এর জন্য
-         * উদাহরণ: openMediaManagerForEditor((url, data) => { ... })
-         */
         window.openMediaManagerForEditor = function (callback) {
             window._mediaTargetField    = null;
             window._mediaEditorCallback = callback;
@@ -276,15 +303,13 @@
             window.dispatchEvent(new CustomEvent('open-media-manager'));
         };
 
-        // Livewire → media-selected ইভেন্ট
+        // Media select → field / editor আপডেট
         Livewire.on('media-selected', (...params) => {
             let data;
 
-            // Case 1: dispatch('media-selected', [ 'id' => ..., 'url' => ... ])
             if (params.length === 1 && typeof params[0] === 'object') {
                 data = params[0];
             } else {
-                // Case 2: dispatch('media-selected', id: .., url: .., name: .., mime: ..)
                 const [id, url, name, mime] = params;
                 data = { id, url, name, mime };
             }
@@ -292,7 +317,7 @@
             const url = data?.url;
             if (!url) return;
 
-            // 1️⃣ যদি editor callback থাকে → ওখানেই হ্যান্ডেল
+            // editor callback থাকলে
             if (typeof window._mediaEditorCallback === 'function') {
                 try {
                     window._mediaEditorCallback(url, data);
@@ -305,59 +330,28 @@
                 return;
             }
 
-            // 2️⃣ Normal input + preview মোড
+            // normal input + preview
             const field = window._mediaTargetField;
             if (!field) {
                 window.dispatchEvent(new CustomEvent('close-media-manager'));
                 return;
             }
 
-            // ---- ইনপুট আপডেট ----
-            let input = document.querySelector('[data-media-input="'+field+'"]');
-            if (!input) input = document.getElementById(field);
-
-            if (input) {
-                input.value = url;
-                // ✅ Livewire property আপডেটের জন্য input ইভেন্ট
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            // ---- প্রিভিউ আপডেট ----
-            let preview = document.querySelector('[data-media-preview="'+field+'"]');
-            if (!preview) preview = document.getElementById(field + '_preview');
-
-            if (preview) {
-                preview.src = url;
-            }
+            window.mediaSetField(field, url);
 
             window.dispatchEvent(new CustomEvent('close-media-manager'));
             window._mediaTargetField    = null;
             window._mediaEditorCallback = null;
         });
 
-
-        // ⬇️ URL থেকে সার্ভার-সাইড ডাউনলোড করার পরে ফিল্ড আপডেট
+        // URL থেকে ডাউনলোড শেষ → field আপডেট
         Livewire.on('media-url-downloaded', (payload) => {
             const fieldId = payload?.fieldId;
             const url     = payload?.url;
 
             if (!fieldId || !url) return;
 
-            let input = document.querySelector('[data-media-input="' + fieldId + '"]')
-                || document.getElementById(fieldId);
-
-            let preview = document.querySelector('[data-media-preview="' + fieldId + '"]')
-                || document.getElementById(fieldId + '_preview');
-
-            if (input) {
-                input.value = url;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            if (preview) {
-                preview.src = url;
-            }
+            window.mediaSetField(fieldId, url);
         });
-
     });
 </script>

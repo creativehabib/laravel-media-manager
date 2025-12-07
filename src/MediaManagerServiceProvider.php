@@ -2,6 +2,7 @@
 
 namespace Habib\MediaManager;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Habib\MediaManager\Http\Livewire\MediaManager as MediaManagerComponent;
@@ -27,6 +28,9 @@ class MediaManagerServiceProvider extends ServiceProvider
         // livewire component
         Livewire::component('media-manager', MediaManagerComponent::class);
 
+        // blade includes
+        Blade::include('mediamanager::partials.styles', 'mediaStyles');
+        Blade::include('mediamanager::partials.scripts', 'mediaScripts');
 
         // publishable
         $this->publishes([
