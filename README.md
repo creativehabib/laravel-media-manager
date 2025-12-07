@@ -9,10 +9,8 @@ A Livewire v3-powered media manager for Laravel applications. It provides a Botb
 - intervention/image
 - Tailwindcss
 - Fontawesome
-- 
 
 ## Features
-
 - 📁 Folder-based file manager
 - 🏷️ Tags & search filters
 - 🖼️ Image preview, crop & optimize
@@ -23,25 +21,19 @@ A Livewire v3-powered media manager for Laravel applications. It provides a Botb
 - 📤 Upload from local or external URL
 - ⚡ Livewire-powered UI (no page reloads)
 - 🧩 Ready-made Blade partials:
-    - `media-input` for input + preview
-    - `media-modal` for the media gallery modal
-      - `media-toast` for toasts/notifications
-    -Easy integration with:
-    - Any simple `<input>` field
-    - CKEditor (or any rich text editor)
+- `media-input` for input + preview
+- `media-modal` for the media gallery modal
+- `media-toast` for toasts/notifications
+-Easy integration with:
+- Any simple `<input>` field
+- CKEditor (or any rich text editor)
 
 ---
 
 ## Installation
 1. Install the package via Composer:
    ```bash
-    composer require creativehabib/media-manager
-   ```
-   ```bash
-    composer require intervention/image
-   ```
-   ```bash
-    composer require intervention/image-laravel
+    composer require creativehabib/media-manager intervention/image intervention/image-laravel
    ```
 2. Publish the configuration (and adjust disks, route prefix, middleware, or permissions as needed):
    ```bash
@@ -51,14 +43,6 @@ A Livewire v3-powered media manager for Laravel applications. It provides a Botb
    ```bash
    php artisan migrate
    ```
-```bash
-    @include('mediamanager::includes.media-input', [
-        'name'  => 'site_logo',
-        'id'    => 'site_logo',
-        'label' => 'Site Logo',
-        'value' => $site_logo,
-    ])
-```
 ## Configuration
 The published `config/mediamanager.php` file lets you control several behaviors:
 - **disks**: which filesystem disks can be managed (default: `public`, `s3`, `do_spaces`).
@@ -77,10 +61,19 @@ The service provider automatically registers routes under the configured prefix,
 Render the media manager anywhere in your app:
 ```blade
 <livewire:media-manager />
-    
-    or
+{{-- or --}}
+@livewire('media-manager')
+```
 
-@livewire('media-manager'
+### Blade input helper
+Drop a media picker + preview into any form field:
+```blade
+@include('mediamanager::includes.media-input', [
+    'name'  => 'site_logo',
+    'id'    => 'site_logo',
+    'label' => 'Site Logo',
+    'value' => $site_logo,
+])
 ```
 
 ### Modal include
