@@ -8,6 +8,7 @@ use Habib\MediaManager\Models\MediaTag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\Encoders\WebpEncoder;
@@ -123,9 +124,20 @@ class MediaManager extends Component
             return;
         }
 
-        $this->validate([
-            'uploads.*' => 'required|file|max:20480',
-        ]);
+        try {
+            $this->validate([
+                'uploads.*' => 'required|file|max:20480',
+            ], [
+                'uploads.*.required' => 'Please select a file to upload.',
+                'uploads.*.file' => 'Only valid files can be uploaded.',
+                'uploads.*.max' => 'The file size must be 20MB or less.',
+            ]);
+        } catch (ValidationException $exception) {
+            $message = $exception->validator->errors()->first('uploads.*')
+                ?: 'Upload failed.';
+            $this->toast($message, 'error');
+            throw $exception;
+        }
 
         foreach ($this->uploads as $file) {
             $path = $file->store(
