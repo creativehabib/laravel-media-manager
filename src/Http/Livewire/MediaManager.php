@@ -125,6 +125,10 @@ class MediaManager extends Component
 
         $this->validate([
             'uploads.*' => 'required|file|max:20480',
+        ], [
+            'uploads.*.required' => 'আপলোডের জন্য ফাইল নির্বাচন করুন।',
+            'uploads.*.file' => 'শুধুমাত্র বৈধ ফাইল আপলোড করা যাবে।',
+            'uploads.*.max' => 'ফাইলের সাইজ সর্বোচ্চ ২০MB হতে হবে।',
         ]);
 
         foreach ($this->uploads as $file) {
