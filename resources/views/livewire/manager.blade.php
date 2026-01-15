@@ -39,6 +39,10 @@
                        x-ref="localUpload"
                        wire:model="uploads"
                        class="hidden">
+
+                @error('uploads.*')
+                    <div class="mt-1 text-xs text-red-500">{{ $message }}</div>
+                @enderror
             </div>
 
             <button type="button"
@@ -1296,4 +1300,3 @@
         </div>
     </div>
 </div>
-
