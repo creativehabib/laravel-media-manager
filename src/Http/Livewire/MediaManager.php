@@ -80,6 +80,11 @@ class MediaManager extends Component
 
     public $showFolderModal = false;
     public $newFolderName   = '';
+    public bool $showEditFolderModal = false;
+    public ?int $editingFolderId = null;
+    public string $editFolderName = '';
+    public bool $showDeleteFolderModal = false;
+    public ?int $deletingFolderId = null;
     protected $queryString = [
         'q',
         'mime',
@@ -993,6 +998,94 @@ class MediaManager extends Component
         $this->showFolderModal = false;
 
         // ফোল্ডার লিস্ট রিফ্রেশের জন্য শুধু পেজ রি-রেন্ডার
+        $this->resetPage();
+        $this->toast('Folder created successfully.');
+    }
+
+    public function openEditFolderModal(int $folderId)
+    {
+        $folder = MediaFolder::find($folderId);
+        if (! $folder) {
+            return;
+        }
+
+        $this->editingFolderId = $folder->id;
+        $this->editFolderName = $folder->name;
+        $this->showEditFolderModal = true;
+        $this->resetErrorBag('editFolderName');
+    }
+
+    public function closeEditFolderModal()
+    {
+        $this->showEditFolderModal = false;
+        $this->editingFolderId = null;
+        $this->editFolderName = '';
+    }
+
+    public function saveFolderEdit()
+    {
+        $this->validate([
+            'editFolderName' => 'required|string|max:191',
+        ], [
+            'editFolderName.required' => 'Folder name is required.',
+        ]);
+
+        if (! $this->editingFolderId) {
+            return;
+        }
+
+        $folder = MediaFolder::find($this->editingFolderId);
+        if (! $folder) {
+            return;
+        }
+
+        $folder->name = $this->editFolderName;
+        $folder->save();
+
+        $this->closeEditFolderModal();
+        $this->toast('Folder renamed successfully.');
+    }
+
+    public function openDeleteFolderModal(int $folderId)
+    {
+        $folder = MediaFolder::find($folderId);
+        if (! $folder) {
+            return;
+        }
+
+        $this->deletingFolderId = $folder->id;
+        $this->showDeleteFolderModal = true;
+    }
+
+    public function closeDeleteFolderModal()
+    {
+        $this->showDeleteFolderModal = false;
+        $this->deletingFolderId = null;
+    }
+
+    public function confirmDeleteFolder()
+    {
+        if (! $this->deletingFolderId) {
+            return;
+        }
+
+        $folder = MediaFolder::find($this->deletingFolderId);
+        if (! $folder) {
+            $this->closeDeleteFolderModal();
+            return;
+        }
+
+        MediaFile::where('folder_id', $folder->id)->update(['folder_id' => null]);
+        MediaFolder::where('parent_id', $folder->id)->update(['parent_id' => null]);
+
+        if ($this->folder_id === $folder->id) {
+            $this->folder_id = null;
+        }
+
+        $folder->delete();
+
+        $this->closeDeleteFolderModal();
+        $this->toast('Folder deleted successfully.');
         $this->resetPage();
     }
 
