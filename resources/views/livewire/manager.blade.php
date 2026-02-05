@@ -315,16 +315,22 @@
 
     {{-- SEARCH + BREADCRUMB --}}
     <div class="bg-white dark:bg-slate-900 rounded border border-gray-200 dark:border-slate-700 px-3 py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300 flex-wrap">
             <i class="fa-solid fa-image"></i>
+
             <button type="button" wire:click="setFolder(null)"
                     class="hover:underline cursor-pointer {{ $folder_id ? '' : 'font-semibold text-gray-800 dark:text-gray-100' }}">
                 All media
             </button>
-            @if($folder_id)
+
+            @foreach($breadcrumbs as $crumb)
                 <span>/</span>
-                <span>folder #{{ $folder_id }}</span>
-            @endif
+                <button type="button"
+                        wire:click="setFolder({{ $crumb->id }})"
+                        class="hover:underline cursor-pointer {{ $loop->last ? 'font-semibold text-gray-800 dark:text-gray-100' : '' }}">
+                    {{ $crumb->name }}
+                </button>
+            @endforeach
         </div>
 
         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -362,9 +368,18 @@
             @else
                 {{-- 🔽 NORMAL LIST (FOLDERS + FILES) --}}
 
-                @if($folders->count())
+                @if($folders->count() || $currentFolder)
                     <div class="mb-3">
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                            @if($currentFolder)
+                                <button type="button"
+                                        wire:click="goToParentFolder"
+                                        class="border border-gray-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900 px-2 py-2 text-[11px] hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer flex flex-col items-center justify-center">
+                                    <span class="text-xl leading-none mb-1">↩</span>
+                                    <span class="truncate w-full text-center">Back</span>
+                                </button>
+                            @endif
+
                             @foreach($folders as $f)
                                 <div class="group border border-gray-200 dark:border-slate-700 rounded bg-gray-50 dark:bg-slate-800 px-2 py-2 text-[11px] {{ $folder_id == $f->id ? 'ring-2 ring-blue-400' : '' }}">
                                     <button type="button"
