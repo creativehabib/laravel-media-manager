@@ -910,6 +910,18 @@ class MediaManager extends Component
         $this->resetPage();
     }
 
+    public function goToParentFolder(): void
+    {
+        if (! $this->folder_id) {
+            return;
+        }
+
+        $currentFolder = MediaFolder::find($this->folder_id);
+
+        $this->folder_id = $currentFolder?->parent_id;
+        $this->resetPage();
+    }
+
     public function setViewMode(string $mode)
     {
         $this->viewMode = $mode;
@@ -1418,13 +1430,45 @@ class MediaManager extends Component
                 break;
         }
 
-        $files   = $query->paginate($this->perPage ?? config('mediamanager.media.perPage', 24));
-        $folders = MediaFolder::with('children')->whereNull('parent_id')->get();
+        $files = $query->paginate($this->perPage ?? config('mediamanager.media.perPage', 24));
+
+        $currentFolder = $this->folder_id
+            ? MediaFolder::find($this->folder_id)
+            : null;
+
+        if ($this->folder_id && ! $currentFolder) {
+            $this->folder_id = null;
+        }
+
+        $activeFolderId = $currentFolder?->id;
+
+        $folders = MediaFolder::query()
+            ->when($activeFolderId, function ($q, $id) {
+                $q->where('parent_id', $id);
+            }, function ($q) {
+                $q->whereNull('parent_id');
+            })
+            ->orderBy('name')
+            ->get();
+
+        $breadcrumbs = collect();
+
+        if ($currentFolder) {
+            $walker = $currentFolder;
+
+            while ($walker) {
+                $breadcrumbs->prepend($walker);
+                $walker = $walker->parent;
+            }
+        }
+
         $tags    = MediaTag::orderBy('name')->get();
 
         return view('mediamanager::livewire.manager', [
             'files'   => $files,
             'folders' => $folders,
+            'currentFolder' => $currentFolder,
+            'breadcrumbs' => $breadcrumbs,
             'tags'    => $tags,
         ]);
     }
