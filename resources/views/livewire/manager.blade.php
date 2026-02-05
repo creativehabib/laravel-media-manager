@@ -366,7 +366,7 @@
                     <div class="mb-3">
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                             @foreach($folders as $f)
-                                <div class="border border-gray-200 dark:border-slate-700 rounded bg-gray-50 dark:bg-slate-800 px-2 py-2 text-[11px] {{ $folder_id == $f->id ? 'ring-2 ring-blue-400' : '' }}">
+                                <div class="group border border-gray-200 dark:border-slate-700 rounded bg-gray-50 dark:bg-slate-800 px-2 py-2 text-[11px] {{ $folder_id == $f->id ? 'ring-2 ring-blue-400' : '' }}">
                                     <button type="button"
                                             wire:click="setFolder({{ $f->id }})"
                                             class="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 rounded py-1 cursor-pointer">
@@ -374,7 +374,7 @@
                                         <span class="truncate w-full text-center">{{ $f->name }}</span>
                                     </button>
 
-                                    <div class="mt-2 flex items-center justify-center gap-1">
+                                    <div class="mt-2 flex items-center justify-center gap-1 opacity-0 pointer-events-none transition-opacity duration-150 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
                                         <button type="button"
                                                 wire:click="openEditFolderModal({{ $f->id }})"
                                                 class="px-2 py-1 rounded border border-gray-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 cursor-pointer"
