@@ -9,6 +9,7 @@ return new class extends Migration {
         Schema::create('media_folders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->foreignId('parent_id')->nullable()->constrained('media_folders')->nullOnDelete();
             $table->string('color')->nullable();
             $table->timestamps();
@@ -18,6 +19,7 @@ return new class extends Migration {
         Schema::create('media_files', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('alt')->nullable();
             $table->foreignId('folder_id')->nullable()->constrained('media_folders')->nullOnDelete();
             $table->string('disk')->default(config('mediamanager.default_disk'));
