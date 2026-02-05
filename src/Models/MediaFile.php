@@ -3,6 +3,7 @@ namespace Habib\MediaManager\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class MediaFile extends Model
@@ -11,6 +12,7 @@ class MediaFile extends Model
 
     protected $fillable = [
         'name',
+        'user_id',
         'folder_id',
         'disk',
         'path',
@@ -28,6 +30,30 @@ class MediaFile extends Model
     ];
 
     protected $appends = ['url'];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('media_owner', function ($query) {
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            $userId = Auth::id();
+
+            if (! $userId) {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+
+            $query->where('user_id', $userId);
+        });
+
+        static::creating(function (self $mediaFile) {
+            if (! $mediaFile->user_id && Auth::id()) {
+                $mediaFile->user_id = Auth::id();
+            }
+        });
+    }
 
     public function folder()
     {
