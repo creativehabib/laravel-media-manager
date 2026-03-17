@@ -228,9 +228,7 @@ class MediaManager extends Component
             }
 
             // ফাইল নাম বের করি
-            $parsed = parse_url($url);
-            $path   = $parsed['path'] ?? 'file';
-            $name   = basename($path) ?: 'file-' . time();
+            $name = $this->resolveUrlFileName($url);
 
             $directory = 'media/' . now()->format('Y/m/d');
             $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
@@ -284,6 +282,20 @@ class MediaManager extends Component
     }
 
 
+
+    protected function resolveUrlFileName(string $url): string
+    {
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+
+        if (! is_string($parsedPath) || $parsedPath === '') {
+            return 'file-' . time();
+        }
+
+        $name = trim(rawurldecode(pathinfo($parsedPath, PATHINFO_BASENAME)));
+
+        return $name !== '' ? $name : 'file-' . time();
+    }
+
     protected function resolveUniqueFileName(string $disk, string $directory, string $originalName): string
     {
         $extension = pathinfo($originalName, PATHINFO_EXTENSION);
@@ -310,9 +322,7 @@ class MediaManager extends Component
                 return null;
             }
 
-            $parsed = parse_url($url);
-            $path   = $parsed['path'] ?? 'file';
-            $name   = basename($path) ?: 'file-' . time();
+            $name = $this->resolveUrlFileName($url);
 
             $directory = 'media/' . now()->format('Y/m/d');
             $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
