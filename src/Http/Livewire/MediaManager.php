@@ -145,8 +145,11 @@ class MediaManager extends Component
         }
 
         foreach ($this->uploads as $file) {
-            $path = $file->store(
-                'media/' . now()->format('Y/m/d'),
+            $originalName = $this->normalizeFileName($file->getClientOriginalName());
+            $directory = 'media/' . now()->format('Y/m/d');
+            $path = $file->storeAs(
+                $directory,
+                $this->resolveUniqueFileName($this->selectedDisk, $directory, $originalName),
                 $this->selectedDisk
             );
 
@@ -163,7 +166,8 @@ class MediaManager extends Component
             }
 
             $media = MediaFile::create([
-                'name'       => $file->getClientOriginalName(),
+                'name'       => $originalName,
+                'alt'        => $originalName,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $path,
@@ -226,11 +230,11 @@ class MediaManager extends Component
             }
 
             // ফাইল নাম বের করি
-            $parsed = parse_url($url);
-            $path   = $parsed['path'] ?? 'file';
-            $name   = basename($path) ?: 'file-' . time();
+            $name = $this->normalizeFileName($this->resolveUrlFileName($url));
 
-            $storePath = 'media/' . now()->format('Y/m/d') . '/' . uniqid() . '-' . $name;
+            $directory = 'media/' . now()->format('Y/m/d');
+            $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
+            $storePath = $directory . '/' . $fileName;
 
             Storage::disk($this->selectedDisk)->put($storePath, $contents);
 
@@ -250,6 +254,7 @@ class MediaManager extends Component
 
             $media = MediaFile::create([
                 'name'       => $name,
+                'alt'        => $name,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $storePath,
@@ -279,6 +284,55 @@ class MediaManager extends Component
         }
     }
 
+
+
+
+    protected function normalizeFileName(string $fileName): string
+    {
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+
+        $normalizedBaseName = (string) Str::of($baseName)
+            ->replaceMatches('/\s+/', '-')
+            ->trim('-');
+
+        if ($normalizedBaseName === '') {
+            $normalizedBaseName = 'file-' . time();
+        }
+
+        return $normalizedBaseName . ($extension ? ".{$extension}" : '');
+    }
+
+    protected function resolveUrlFileName(string $url): string
+    {
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+
+        if (! is_string($parsedPath) || $parsedPath === '') {
+            return 'file-' . time();
+        }
+
+        $name = trim(rawurldecode(pathinfo($parsedPath, PATHINFO_BASENAME)));
+
+        return $name !== '' ? $name : 'file-' . time();
+    }
+
+    protected function resolveUniqueFileName(string $disk, string $directory, string $originalName): string
+    {
+        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+
+        $candidate = $originalName;
+        $counter = 1;
+
+        while (Storage::disk($disk)->exists("{$directory}/{$candidate}")) {
+            $suffix = '-' . $counter;
+            $candidate = $baseName . $suffix . ($extension ? ".{$extension}" : '');
+            $counter++;
+        }
+
+        return $candidate;
+    }
+
     protected function downloadUrlToMedia(string $url): ?MediaFile
     {
         try {
@@ -288,11 +342,11 @@ class MediaManager extends Component
                 return null;
             }
 
-            $parsed = parse_url($url);
-            $path   = $parsed['path'] ?? 'file';
-            $name   = basename($path) ?: 'file-' . time();
+            $name = $this->normalizeFileName($this->resolveUrlFileName($url));
 
-            $storePath = 'media/' . now()->format('Y/m/d') . '/' . uniqid() . '-' . $name;
+            $directory = 'media/' . now()->format('Y/m/d');
+            $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
+            $storePath = $directory . '/' . $fileName;
 
             Storage::disk($this->selectedDisk)->put($storePath, $contents);
 
@@ -312,6 +366,7 @@ class MediaManager extends Component
 
             $media = MediaFile::create([
                 'name'       => $name,
+                'alt'        => $name,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $storePath,
