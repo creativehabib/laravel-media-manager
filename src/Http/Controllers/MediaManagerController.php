@@ -39,7 +39,12 @@ class MediaManagerController extends Controller
         $disk = $request->input('disk', config('mediamanager.default_disk'));
 
         foreach ($request->file('files', []) as $file) {
-            $path = $file->store('media/'.now()->format('Y/m/d'), $disk);
+            $directory = 'media/'.now()->format('Y/m/d');
+            $path = $file->storeAs(
+                $directory,
+                $this->resolveUniqueFileName($disk, $directory, $file->getClientOriginalName()),
+                $disk
+            );
 
             $media = MediaFile::create([
                 'name'       => $file->getClientOriginalName(),
@@ -82,5 +87,22 @@ class MediaManagerController extends Controller
         if ($permission && Gate::denies($permission)) {
             abort(403);
         }
+    }
+
+    protected function resolveUniqueFileName(string $disk, string $directory, string $originalName): string
+    {
+        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+
+        $candidate = $originalName;
+        $counter = 1;
+
+        while (Storage::disk($disk)->exists("{$directory}/{$candidate}")) {
+            $suffix = '-' . $counter;
+            $candidate = $baseName . $suffix . ($extension ? ".{$extension}" : '');
+            $counter++;
+        }
+
+        return $candidate;
     }
 }
