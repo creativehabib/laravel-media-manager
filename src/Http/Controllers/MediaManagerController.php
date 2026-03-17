@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MediaManagerController extends Controller
 {
@@ -39,23 +40,24 @@ class MediaManagerController extends Controller
         $disk = $request->input('disk', config('mediamanager.default_disk'));
 
         foreach ($request->file('files', []) as $file) {
+            $originalName = $this->normalizeFileName($file->getClientOriginalName());
             $directory = 'media/'.now()->format('Y/m/d');
             $path = $file->storeAs(
                 $directory,
-                $this->resolveUniqueFileName($disk, $directory, $file->getClientOriginalName()),
+                $this->resolveUniqueFileName($disk, $directory, $originalName),
                 $disk
             );
 
             $media = MediaFile::create([
-                'name'       => $file->getClientOriginalName(),
-                'alt'        => $request->input('alt'),
+                'name'       => $originalName,
+                'alt'        => trim((string) $request->input('alt', '')) ?: $originalName,
                 'folder_id'  => $request->input('folder_id'),
                 'disk'       => $disk,
                 'path'       => $path,
                 'mime_type'  => $file->getMimeType(),
                 'size'       => $file->getSize(),
                 'visibility' => $request->input('visibility', 'public'),
-                'random_hash'=> md5($file->getClientOriginalName().microtime()),
+                'random_hash'=> md5($originalName.microtime()),
             ]);
 
             if ($tags = $request->input('tags')) {
@@ -87,6 +89,23 @@ class MediaManagerController extends Controller
         if ($permission && Gate::denies($permission)) {
             abort(403);
         }
+    }
+
+
+    protected function normalizeFileName(string $fileName): string
+    {
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+
+        $normalizedBaseName = (string) Str::of($baseName)
+            ->replaceMatches('/\s+/', '-')
+            ->trim('-');
+
+        if ($normalizedBaseName === '') {
+            $normalizedBaseName = 'file-' . time();
+        }
+
+        return $normalizedBaseName . ($extension ? ".{$extension}" : '');
     }
 
     protected function resolveUniqueFileName(string $disk, string $directory, string $originalName): string

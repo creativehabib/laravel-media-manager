@@ -145,10 +145,11 @@ class MediaManager extends Component
         }
 
         foreach ($this->uploads as $file) {
+            $originalName = $this->normalizeFileName($file->getClientOriginalName());
             $directory = 'media/' . now()->format('Y/m/d');
             $path = $file->storeAs(
                 $directory,
-                $this->resolveUniqueFileName($this->selectedDisk, $directory, $file->getClientOriginalName()),
+                $this->resolveUniqueFileName($this->selectedDisk, $directory, $originalName),
                 $this->selectedDisk
             );
 
@@ -165,7 +166,8 @@ class MediaManager extends Component
             }
 
             $media = MediaFile::create([
-                'name'       => $file->getClientOriginalName(),
+                'name'       => $originalName,
+                'alt'        => $originalName,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $path,
@@ -228,7 +230,7 @@ class MediaManager extends Component
             }
 
             // ফাইল নাম বের করি
-            $name = $this->resolveUrlFileName($url);
+            $name = $this->normalizeFileName($this->resolveUrlFileName($url));
 
             $directory = 'media/' . now()->format('Y/m/d');
             $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
@@ -252,6 +254,7 @@ class MediaManager extends Component
 
             $media = MediaFile::create([
                 'name'       => $name,
+                'alt'        => $name,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $storePath,
@@ -282,6 +285,23 @@ class MediaManager extends Component
     }
 
 
+
+
+    protected function normalizeFileName(string $fileName): string
+    {
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+
+        $normalizedBaseName = (string) Str::of($baseName)
+            ->replaceMatches('/\s+/', '-')
+            ->trim('-');
+
+        if ($normalizedBaseName === '') {
+            $normalizedBaseName = 'file-' . time();
+        }
+
+        return $normalizedBaseName . ($extension ? ".{$extension}" : '');
+    }
 
     protected function resolveUrlFileName(string $url): string
     {
@@ -322,7 +342,7 @@ class MediaManager extends Component
                 return null;
             }
 
-            $name = $this->resolveUrlFileName($url);
+            $name = $this->normalizeFileName($this->resolveUrlFileName($url));
 
             $directory = 'media/' . now()->format('Y/m/d');
             $fileName = $this->resolveUniqueFileName($this->selectedDisk, $directory, $name);
@@ -346,6 +366,7 @@ class MediaManager extends Component
 
             $media = MediaFile::create([
                 'name'       => $name,
+                'alt'        => $name,
                 'folder_id'  => $this->folder_id,
                 'disk'       => $this->selectedDisk,
                 'path'       => $storePath,
