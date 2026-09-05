@@ -17,7 +17,7 @@
     },
     "require": {
         "php": "^8.2",
-        "livewire/livewire": "^3.3"
+        "livewire/livewire": "^3.3 || ^4.0"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
