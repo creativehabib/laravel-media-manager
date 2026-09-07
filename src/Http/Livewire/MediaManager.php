@@ -160,7 +160,7 @@ class MediaManager extends Component
 
             // if image then calculate dimension
             if(Str::startsWith($mime, 'image/')) {
-                $image = ImageManager::read($file->getRealPath());
+                $image = ImageManager::decode($file->getRealPath());
                 $width = $image->width();
                 $height = $image->height();
             }
@@ -247,7 +247,7 @@ class MediaManager extends Component
 
             if(Str::startsWith($mime, 'image/')) {
                 $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
-                $image = ImageManager::read($fullPath);
+                $image = ImageManager::decode($fullPath);
                 $width = $image->width();
                 $height = $image->height();
             }
@@ -359,7 +359,7 @@ class MediaManager extends Component
 
             if (Str::startsWith($mime, 'image/')) {
                 $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
-                $image    = ImageManager::read($fullPath);
+                $image    = ImageManager::decode($fullPath);
                 $width    = $image->width();
                 $height   = $image->height();
             }
@@ -660,7 +660,7 @@ class MediaManager extends Component
         $fullPath = Storage::disk($disk)->path($path);
 
         // Intervention Image ব্যবহার করে ফাইল লোড
-        $image = ImageManager::read($fullPath);
+        $image = ImageManager::decode($fullPath);
 
         // ✅ সেফটি: crop area যেন ইমেজের বাইরে না যায়
         $imgW = $image->width();
