@@ -16,38 +16,29 @@ use Intervention\Image\MediaType;
 class ImageResponseFactory
 {
     /**
-     * Image encoder options
+     * Image encoder options.
      *
      * @var array<string, mixed>
      */
     protected array $options = [];
 
     /**
-     * Create new ImageResponseFactory instance
-     *
-     * @param ImageInterface $image
-     * @param null|string|Format|MediaType|FileExtension $format
-     * @param mixed ...$options
-     * @return void
+     * Create new ImageResponseFactory instance.
      */
     public function __construct(
         protected ImageInterface $image,
         protected null|string|Format|MediaType|FileExtension $format = null,
-        mixed ...$options
+        mixed ...$options,
     ) {
         $this->options = $options;
     }
 
     /**
-     * Static factory method to create HTTP response directly
+     * Static factory method to create HTTP response directly.
      *
-     * @param ImageInterface $image
-     * @param null|string|Format|MediaType|FileExtension $format
-     * @param mixed ...$options
      * @throws NotSupportedException
      * @throws DriverException
      * @throws RuntimeException
-     * @return Response
      */
     public static function make(
         ImageInterface $image,
@@ -58,53 +49,49 @@ class ImageResponseFactory
     }
 
     /**
-     * Create HTTP response
+     * Create HTTP response.
      *
      * @throws NotSupportedException
      * @throws DriverException
      * @throws RuntimeException
-     * @return Response
      */
     public function response(): Response
     {
         return new Response(
             content: $this->content(),
-            headers: $this->headers()
+            headers: $this->headers(),
         );
     }
 
     /**
-     * Read image contents
+     * Read image contents.
      *
      * @throws NotSupportedException
      * @throws DriverException
      * @throws RuntimeException
-     * @return string
      */
     private function content(): string
     {
-        return (string) $this->image->encodeByMediaType(
+        return (string) $this->image->encodeUsingMediaType(
             $this->format()->mediaType(),
-            ...$this->options
+            ...$this->options,
         );
     }
 
     /**
-     * Return HTTP response headers to be attached in the image response
+     * Return HTTP response headers to be attached in the image response.
      *
-     * @return array
+     * @return array<string, string>
      */
     private function headers(): array
     {
         return [
-            'Content-Type' => $this->format()->mediaType()->value
+            'Content-Type' => $this->format()->mediaType()->value,
         ];
     }
 
     /**
-     * Determine the target format of the image in the HTTP response
-     *
-     * @return Format
+     * Determine the target format of the image in the HTTP response.
      */
     private function format(): Format
     {
@@ -112,7 +99,7 @@ class ImageResponseFactory
             return $this->format;
         }
 
-        if (($this->format instanceof MediaType)) {
+        if ($this->format instanceof MediaType) {
             return $this->format->format();
         }
 

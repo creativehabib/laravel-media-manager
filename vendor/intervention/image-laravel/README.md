@@ -42,7 +42,7 @@ The configuration file can be copied to the application with the following comma
 php artisan vendor:publish --provider="Intervention\Image\Laravel\ServiceProvider"
 ```
 
-This command will publish the configuration file `config/image.php`. Here you
+This command will publish the configuration file `config/intervention-image.php`. Here you
 can set the desired driver and its configuration options for Intervention
 Image. By default the library is configured to use GD library for image
 processing.
@@ -63,10 +63,10 @@ return [
     | Included options:
     |   - \Intervention\Image\Drivers\Gd\Driver::class
     |   - \Intervention\Image\Drivers\Imagick\Driver::class
-    |
+    |   - \Intervention\Image\Drivers\Vips\Driver::class
     */
 
-    'driver' => \Intervention\Image\Drivers\Gd\Driver::class,
+    'driver' => env('IMAGE_DRIVER', \Intervention\Image\Drivers\Gd\Driver::class),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,7 +81,7 @@ return [
     | - "decodeAnimation" decides whether a possibly animated image is
     |    decoded as such or whether the animation is discarded.
     |
-    | - "blendingColor" Defines the default blending color.
+    | - "backgroundColor" Defines the default background & blending color.
     |
     | - "strip" controls if meta data like exif tags should be removed when
     |    encoding images.
@@ -90,23 +90,52 @@ return [
     'options' => [
         'autoOrientation' => true,
         'decodeAnimation' => true,
-        'blendingColor' => 'ffffff',
+        'backgroundColor' => 'ffffff',
         'strip' => false,
     ]
 ];
 ```
 
 You can read more about the different options for
-[driver selection](https://image.intervention.io/v3/basics/image-manager#driver-selection), setting options for 
-[auto orientation](https://image.intervention.io/v3/modifying/effects#image-orientation-according-to-exif-data), 
-[decoding animations](https://image.intervention.io/v3/modifying/animations) and 
-[blending color](https://image.intervention.io/v3/basics/colors#transparency).
+[driver selection](https://image.intervention.io/v4/basics/configuration-drivers#driver-selection), setting options for 
+[auto orientation](https://image.intervention.io/v4/modifying-images/effects#image-orientation-according-to-exif-data), 
+[decoding animations](https://image.intervention.io/v4/modifying-images/animations) and 
+[background color](https://image.intervention.io/v4/basics/colors#transparency).
+
+### Dependency Injection
+
+The image manager can be used by resolving either `Intervention\Image\ImageManager` or `Intervention\Image\Interfaces\ImageManagerInterface` at various points in the application via dependency injection, resulting in a manager instance based on the application-wide image configuration.
+
+The following example illustrates this using a controller.
+
+```php
+use Intervention\Image\Interfaces\ImageManagerInterface;
+use Illuminate\Http\Request;
+
+class ImageController extends Controller
+{
+    /**
+     * Create a new controller instance by injecting an image manager.
+     */
+    public function __construct(
+        protected ImageManagerInterface $imageManager,
+    ) {}
+
+    /**
+     * Handle image upload.
+     */
+    public function handleImageUpload(Request $request): RedirectResponse
+    {
+        $image = $this->imageManager->decodeSplFileInfo($request->file('image'));
+    }
+}
+```
 
 ### Static Facade Interface
 
 This package also integrates access to Intervention Image's central entry
-point, the `ImageManager::class`, via a static [facade](https://laravel.com/docs/11.x/facades). The call provides access to the
-centrally configured [image manager](https://image.intervention.io/v3/basics/instantiation) via singleton pattern.
+point, the `ImageManager::class`, via a static [facade](https://laravel.com/docs/facades). The call provides access to the
+centrally configured [image manager](https://image.intervention.io/v4/basics/instantiation) via singleton pattern.
 
 The following code example shows how to read an image from an upload request
 the image facade in a Laravel route and save it on disk with a random file
@@ -121,12 +150,12 @@ use Intervention\Image\Laravel\Facades\Image;
 
 Route::get('/', function (Request $request) {
     $upload = $request->file('image');
-    $image = Image::read($upload)
-        ->resize(300, 200);
+    $image = Image::decode($upload);
+    $image = $image->resize(300, 200);
 
     Storage::put(
         Str::random() . '.' . $upload->getClientOriginalExtension(),
-        $image->encodeByExtension($upload->getClientOriginalExtension(), quality: 70)
+        $image->encodeUsingFileExtension($upload->getClientOriginalExtension(), quality: 70)
     );
 });
 ```
@@ -148,8 +177,8 @@ use Intervention\Image\Format;
 use Intervention\Image\Laravel\Facades\Image;
 
 Route::get('/', function () {
-    $image = Image::read(Storage::get('example.jpg'))
-        ->scale(300, 200);
+    $image = Image::decode(Storage::get('example.jpg'));
+    $image = $image->scale(300, 200);
 
     return response()->image($image, Format::WEBP, quality: 65);
 });
