@@ -144,6 +144,8 @@ class MediaManager extends Component
             throw $exception;
         }
 
+        $successCount = 0; // সফল আপলোড ট্র্যাক করার ভেরিয়েবল
+
         foreach ($this->uploads as $file) {
             $originalName = $this->normalizeFileName($file->getClientOriginalName());
             $directory = 'media/' . now()->format('Y/m/d');
@@ -167,7 +169,7 @@ class MediaManager extends Component
                 } catch (\Exception $e) {
                     Storage::disk($this->selectedDisk)->delete($path);
                     $this->toast("{$originalName} is an unsupported image format.", 'error');
-                    continue;
+                    continue; // ফেইল করলে লুপ স্কিপ করবে
                 }
             }
 
@@ -195,11 +197,14 @@ class MediaManager extends Component
 
             // প্রিভিউতে দেখানোর জন্য
             $this->selectedId = $media->id;
+            $successCount++;
         }
 
         $this->reset('uploads');
         $this->resetPage();
-        $this->toast('Upload successfully!', 'success');
+        if ($successCount > 0) {
+            $this->toast('Upload successfully!', type: 'success');
+        }
     }
 
     /* ========= Upload from URL ========= */
@@ -530,7 +535,7 @@ class MediaManager extends Component
 
         $this->selectedId = $copy->id;
         $this->resetPage();
-        $this->toast('File duplicate successfully.');
+        $this->toast('File duplicate successfully.', 'success');
         $this->refreshState();
     }
 
@@ -566,10 +571,10 @@ class MediaManager extends Component
 
         if($this->skipTrash) {
             $this->deleteMedia($file->id);
-            $this->toast('File permanently deleted.');
+            $this->toast('File permanently deleted.', 'success');
         } else {
             $file->delete();
-            $this->toast('File moved to trash successfully.');
+            $this->toast('File moved to trash successfully.', 'success');
         }
         $this->selectedId = null;
         $this->resetPage();
@@ -904,7 +909,7 @@ class MediaManager extends Component
         $file->alt = $this->altTextInput;
         $file->save();
 
-        $this->toast('File alt text saved successfully.');
+        $this->toast('File alt text saved successfully.', 'success');
 
         $this->showAltModal = false;
         $this->refreshState(); // ✅
@@ -925,7 +930,7 @@ class MediaManager extends Component
 
         $this->dispatch('media-copy-link', url: $file->url);
 
-        $this->toast('File link copy successfully.');
+        $this->toast('File link copy successfully.', 'success');
         $this->closeContextMenu(); // ✅
     }
 
@@ -945,7 +950,7 @@ class MediaManager extends Component
             : $file->url;
 
         $this->dispatch('media-copy-link', url: $indirect);
-        $this->toast('File indirect link copy successfully.');
+        $this->toast('File indirect link copy successfully.', 'success');
 
         $this->closeContextMenu(); // ✅
     }
@@ -1088,7 +1093,7 @@ class MediaManager extends Component
 
         // ফোল্ডার লিস্ট রিফ্রেশের জন্য শুধু পেজ রি-রেন্ডার
         $this->resetPage();
-        $this->toast('Folder created successfully.');
+        $this->toast('Folder created successfully.', 'success');
     }
 
     public function openEditFolderModal(int $folderId)
@@ -1132,7 +1137,7 @@ class MediaManager extends Component
         $folder->save();
 
         $this->closeEditFolderModal();
-        $this->toast('Folder renamed successfully.');
+        $this->toast('Folder renamed successfully.', 'success');
     }
 
     public function openDeleteFolderModal(int $folderId)
@@ -1174,7 +1179,7 @@ class MediaManager extends Component
         $folder->delete();
 
         $this->closeDeleteFolderModal();
-        $this->toast('Folder deleted successfully.');
+        $this->toast('Folder deleted successfully.', 'success');
         $this->resetPage();
     }
 
@@ -1255,7 +1260,7 @@ class MediaManager extends Component
         $this->selectedId = null;
         $this->resetPage();
         $this->resetPerPage();
-        $this->toast('Trash has been cleared.');
+        $this->toast('Trash has been cleared.', "success");
     }
 
     // বাটন থেকে মডাল ওপেন
@@ -1281,7 +1286,7 @@ class MediaManager extends Component
 
         $this->showEmptyTrashModal = false;
 
-        $this->toast('Trash emptied successfully.');
+        $this->toast('Trash emptied successfully.', 'success');
     }
 
     public function openDeletePermanentModal(?int $id = null)
@@ -1323,7 +1328,7 @@ class MediaManager extends Component
         $this->resetPage();
         $this->resetPerPage();
 
-        $this->toast('File permanently deleted.');
+        $this->toast('File permanently deleted.', 'success');
     }
 
     /* ========= Right-click context menu ========= */
@@ -1358,7 +1363,7 @@ class MediaManager extends Component
         $this->selectedId = null;
         $this->resetPage();
         $this->closeContextMenu();
-        $this->toast('File restored successfully.');
+        $this->toast('File restored successfully.', 'success');
     }
 
     public $showRenameModal = false;
@@ -1398,7 +1403,7 @@ class MediaManager extends Component
         $file->save();
 
         $this->showRenameModal = false;
-        $this->toast('File successfully renamed.');
+        $this->toast('File successfully renamed.', "success");
         $this->refreshState(); // ✅
     }
 
