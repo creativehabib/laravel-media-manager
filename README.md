@@ -5,8 +5,8 @@ A Livewire v3-powered media manager for Laravel applications. It provides a Botb
 ## Requirements
 - PHP 8.2+
 - Laravel with Livewire 3 installed
-- intervention/image-laravel
-- intervention/image
+- intervention/image 3.x (installed automatically)
+- intervention/image-laravel 1.x (installed automatically)
 - Tailwindcss
 - Fontawesome
 
@@ -33,8 +33,9 @@ A Livewire v3-powered media manager for Laravel applications. It provides a Botb
 ## Installation
 1. Install the package via Composer:
    ```bash
-    composer require creativehabib/media-manager intervention/image intervention/image-laravel
+    composer require creativehabib/media-manager
    ```
+   The package requires Intervention Image 3 and its Laravel integration, so Composer will install compatible versions automatically. Do not install Intervention Image 2 alongside this package: its image manager does not provide the `usingDriver()` API required by the Laravel integration.
 2. Publish the configuration (and adjust disks, route prefix, middleware, or permissions as needed):
    ```bash
    php artisan vendor:publish --provider="Habib\\MediaManager\\MediaManagerServiceProvider" --tag=config
