@@ -17,7 +17,9 @@
     },
     "require": {
         "php": "^8.2",
-        "livewire/livewire": "^3.3 || ^4.0"
+        "livewire/livewire": "^3.3 || ^4.0",
+        "intervention/image": "^3.0",
+        "intervention/image-laravel": "^1.0"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
