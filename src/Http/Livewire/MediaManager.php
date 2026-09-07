@@ -160,9 +160,15 @@ class MediaManager extends Component
 
             // if image then calculate dimension
             if(Str::startsWith($mime, 'image/')) {
-                $image = ImageManager::decode($file->getRealPath());
-                $width = $image->width();
-                $height = $image->height();
+                try {
+                    $image = ImageManager::decode($file->getRealPath());
+                    $width = $image->width();
+                    $height = $image->height();
+                } catch (\Exception $e) {
+                    Storage::disk($this->selectedDisk)->delete($path);
+                    $this->toast("{$originalName} is an unsupported image format.", 'error');
+                    continue;
+                }
             }
 
             $media = MediaFile::create([
@@ -246,10 +252,16 @@ class MediaManager extends Component
 
 
             if(Str::startsWith($mime, 'image/')) {
-                $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
-                $image = ImageManager::decode($fullPath);
-                $width = $image->width();
-                $height = $image->height();
+                try {
+                    $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
+                    $image = ImageManager::decode($fullPath);
+                    $width = $image->width();
+                    $height = $image->height();
+                } catch (\Exception $e) {
+                    Storage::disk($this->selectedDisk)->delete($storePath);
+                    $this->toast('The URL contains an unsupported image format.', 'error');
+                    return;
+                }
             }
 
             $media = MediaFile::create([
@@ -358,10 +370,15 @@ class MediaManager extends Component
             $height = null;
 
             if (Str::startsWith($mime, 'image/')) {
-                $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
-                $image    = ImageManager::decode($fullPath);
-                $width    = $image->width();
-                $height   = $image->height();
+                try {
+                    $fullPath = Storage::disk($this->selectedDisk)->path($storePath);
+                    $image    = ImageManager::decode($fullPath);
+                    $width    = $image->width();
+                    $height   = $image->height();
+                } catch (\Exception $e) {
+                    Storage::disk($this->selectedDisk)->delete($storePath);
+                    return null;
+                }
             }
 
             $media = MediaFile::create([
@@ -514,7 +531,7 @@ class MediaManager extends Component
         $this->selectedId = $copy->id;
         $this->resetPage();
         $this->toast('File duplicate successfully.');
-        $this->refreshState(); // ✅
+        $this->refreshState();
     }
 
     /**
@@ -529,7 +546,7 @@ class MediaManager extends Component
         $this->skipTrash = false;
         $this->showMoveToTrashModal = true;
 
-        $this->closeContextMenu(); // ✅
+        $this->closeContextMenu();
     }
 
     public function closeMoveToTrashModal()
@@ -659,8 +676,13 @@ class MediaManager extends Component
         $path     = $file->path;
         $fullPath = Storage::disk($disk)->path($path);
 
-        // Intervention Image ব্যবহার করে ফাইল লোড
-        $image = ImageManager::decode($fullPath);
+        try {
+            $image = ImageManager::decode($fullPath);
+        } catch (\Exception $e) {
+            $this->toast('Cannot crop this image. Unsupported format or corrupted file.', 'error');
+            return;
+        }
+
 
         // ✅ সেফটি: crop area যেন ইমেজের বাইরে না যায়
         $imgW = $image->width();
